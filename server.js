@@ -38,7 +38,7 @@ app.post('/tc', async (req, res) => {
   const modifiedBody = {
     ...originalBody,
     bl: BL_TASKS,
-    max_tasks: 2,
+    max_tasks: 1,
     num_of_tasks: '2'
   }
 
