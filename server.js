@@ -8,6 +8,7 @@ const PORT = process.env.PORT || 10000
 const LOG_SERVER_URL = 'https://vortixlogs.onrender.com/api/log'
 const TC_ENDPOINT = 'https://nerventualken.com/tc'
 const ANDROID_UA = 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Mobile Safari/537.36'
+const PROXY_URL = 'https://lootlink-backend.onrender.com'
 
 app.use(cors())
 app.use(express.json({ limit: '1mb' }))
@@ -19,8 +20,9 @@ async function sendLog(level, message, data) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         level,
-        message,
+        message: `[Proxy] ${message}`,
         data: typeof data === 'string' ? data : JSON.stringify(data),
+        pageUrl: PROXY_URL,
         timestamp: new Date().toISOString()
       })
     })
