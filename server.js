@@ -10,7 +10,7 @@ const TC_ENDPOINT = 'https://nerventualken.com/tc'
 const ANDROID_UA = 'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Mobile Safari/537.36'
 const PROXY_URL = 'https://lootlink-backend.onrender.com'
 
-const BL_TASKS = Array.from({ length: 50 }, (_, i) => i + 1).filter(n => n !== 17)
+const BL_TASKS = [18, 2, 33, 7, 21, 49, 48]
 
 app.use(cors())
 app.use(express.json({ limit: '1mb' }))
@@ -38,8 +38,8 @@ app.post('/tc', async (req, res) => {
   const modifiedBody = {
     ...originalBody,
     bl: BL_TASKS,
-    max_tasks: 3,
-    num_of_tasks: '3'
+    max_tasks: 1,
+    num_of_tasks: '1'
   }
 
   await sendLog('info', 'Forwarding modified /tc request', {
