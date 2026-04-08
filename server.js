@@ -3,7 +3,7 @@ const cors = require('cors')
 const fetch = require('node-fetch')
 
 const app = express()
-const PORT = process.env.PORT || 10000
+const PORT = process.env.PORT || 3000
 
 const LOG_SERVER_URL = 'https://vortixlogs.onrender.com/api/log'
 const TC_ENDPOINT = 'https://nerventualken.com/tc'
