@@ -38,10 +38,21 @@ app.post('/tc', async (req, res) => {
   const modifiedBody = {
     ...originalBody,
     bl: BL_TASKS,
-    max_tasks: 3
+    max_tasks: 3,
+    num_of_tasks: '3'
   }
 
-  await sendLog('info', 'Forwarding modified /tc request', { keys: Object.keys(modifiedBody), bl: modifiedBody.bl, max_tasks: modifiedBody.max_tasks })
+  await sendLog('info', 'Forwarding modified /tc request', {
+    tid: modifiedBody.tid,
+    bl: modifiedBody.bl,
+    session: modifiedBody.session,
+    max_tasks: modifiedBody.max_tasks,
+    num_of_tasks: modifiedBody.num_of_tasks,
+    design_id: modifiedBody.design_id,
+    cur_url: modifiedBody.cur_url ? modifiedBody.cur_url.substring(0, 100) + '...' : undefined,
+    is_loot: modifiedBody.is_loot,
+    rkey: modifiedBody.rkey
+  })
 
   try {
     const response = await fetch(TC_ENDPOINT, {
