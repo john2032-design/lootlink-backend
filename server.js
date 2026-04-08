@@ -3,12 +3,14 @@ const cors = require('cors')
 const fetch = require('node-fetch')
 
 const app = express()
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 10000
 
 const LOG_SERVER_URL = 'https://vortixlogs.onrender.com/api/log'
 const TC_ENDPOINT = 'https://nerventualken.com/tc'
 const ANDROID_UA = 'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Mobile Safari/537.36'
 const PROXY_URL = 'https://lootlink-backend.onrender.com'
+
+const BL_TASKS = Array.from({ length: 50 }, (_, i) => i + 1).filter(n => n !== 17)
 
 app.use(cors())
 app.use(express.json({ limit: '1mb' }))
@@ -30,8 +32,16 @@ async function sendLog(level, message, data) {
 }
 
 app.post('/tc', async (req, res) => {
-  const body = req.body
-  await sendLog('info', 'Proxying /tc request', { keys: Object.keys(body), bl: body.bl })
+  const originalBody = req.body
+  await sendLog('info', 'Received /tc proxy request', { keys: Object.keys(originalBody) })
+
+  const modifiedBody = {
+    ...originalBody,
+    bl: BL_TASKS,
+    max_tasks: 3
+  }
+
+  await sendLog('info', 'Forwarding modified /tc request', { keys: Object.keys(modifiedBody), bl: modifiedBody.bl, max_tasks: modifiedBody.max_tasks })
 
   try {
     const response = await fetch(TC_ENDPOINT, {
@@ -40,7 +50,7 @@ app.post('/tc', async (req, res) => {
         'Content-Type': 'application/json',
         'User-Agent': ANDROID_UA
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify(modifiedBody)
     })
 
     const text = await response.text()
