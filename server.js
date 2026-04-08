@@ -10,7 +10,7 @@ const TC_ENDPOINT = 'https://nerventualken.com/tc'
 const ANDROID_UA = 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Mobile Safari/537.36'
 
 app.use(cors())
-app.use(express.json())
+app.use(express.json({ limit: '1mb' }))
 
 async function sendLog(level, message, data) {
   try {
@@ -28,13 +28,8 @@ async function sendLog(level, message, data) {
 }
 
 app.post('/tc', async (req, res) => {
-  const { bl } = req.body
-  if (!Array.isArray(bl)) {
-    await sendLog('error', 'Invalid /tc request: bl missing or not array', JSON.stringify(req.body))
-    return res.status(400).json({ error: 'bl array required' })
-  }
-
-  await sendLog('info', 'Proxying /tc request', `bl length: ${bl.length}`)
+  const body = req.body
+  await sendLog('info', 'Proxying /tc request', `body keys: ${Object.keys(body).join(', ')}`)
 
   try {
     const response = await fetch(TC_ENDPOINT, {
@@ -43,7 +38,7 @@ app.post('/tc', async (req, res) => {
         'Content-Type': 'application/json',
         'User-Agent': ANDROID_UA
       },
-      body: JSON.stringify({ bl })
+      body: JSON.stringify(body)
     })
 
     const text = await response.text()
