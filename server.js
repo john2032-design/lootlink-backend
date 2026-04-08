@@ -20,7 +20,7 @@ async function sendLog(level, message, data) {
       body: JSON.stringify({
         level,
         message,
-        data: data || '',
+        data: typeof data === 'string' ? data : JSON.stringify(data),
         timestamp: new Date().toISOString()
       })
     })
@@ -29,7 +29,7 @@ async function sendLog(level, message, data) {
 
 app.post('/tc', async (req, res) => {
   const body = req.body
-  await sendLog('info', 'Proxying /tc request', `body keys: ${Object.keys(body).join(', ')}`)
+  await sendLog('info', 'Proxying /tc request', { keys: Object.keys(body), bl: body.bl })
 
   try {
     const response = await fetch(TC_ENDPOINT, {
