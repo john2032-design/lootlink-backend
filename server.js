@@ -1,14 +1,18 @@
-const express = require('express');
-const app = express();
-const PORT = process.env.PORT || 3000;
+const express = require('express')
+const cors = require('cors')
+const fetch = require('node-fetch')
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true }));
+const app = express()
+const PORT = process.env.PORT || 10000
 
-const ANDROID_UA = 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Mobile Safari/537.36';
-const LOG_SERVER_URL = 'https://vortixlogs.onrender.com/api/log';
+const LOG_SERVER_URL = 'https://vortixlogs.onrender.com/api/log'
+const TC_ENDPOINT = 'https://nerventualken.com/tc'
+const ANDROID_UA = 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Mobile Safari/537.36'
 
-async function sendLog(level, message, data, pageUrl) {
+app.use(cors())
+app.use(express.json())
+
+async function sendLog(level, message, data) {
   try {
     await fetch(LOG_SERVER_URL, {
       method: 'POST',
@@ -17,59 +21,48 @@ async function sendLog(level, message, data, pageUrl) {
         level,
         message,
         data: data || '',
-        pageUrl: pageUrl || '',
         timestamp: new Date().toISOString()
       })
-    });
-  } catch (e) {
-    console.error('Log send failed', e);
-  }
+    })
+  } catch (e) {}
 }
 
-app.post('/proxy/tc', async (req, res) => {
-  const targetUrl = req.headers['x-target-url'];
-  if (!targetUrl) {
-    await sendLog('error', 'Missing X-Target-URL header', '', req.headers.referer || '');
-    return res.status(400).json({ error: 'Missing X-Target-URL header' });
+app.post('/tc', async (req, res) => {
+  const { bl } = req.body
+  if (!Array.isArray(bl)) {
+    await sendLog('error', 'Invalid /tc request: bl missing or not array', JSON.stringify(req.body))
+    return res.status(400).json({ error: 'bl array required' })
   }
 
-  const forwardHeaders = { ...req.headers };
-  delete forwardHeaders.host;
-  delete forwardHeaders['x-target-url'];
-  forwardHeaders['user-agent'] = ANDROID_UA;
-  forwardHeaders['content-type'] = 'application/json';
-
-  let body = req.body;
-  if (body && typeof body === 'object') {
-    if (!body.bl) {
-      const blTasks = Array.from({ length: 50 }, (_, i) => i + 1).filter(n => n !== 17);
-      body.bl = blTasks;
-    }
-  } else {
-    body = { bl: Array.from({ length: 50 }, (_, i) => i + 1).filter(n => n !== 17) };
-  }
+  await sendLog('info', 'Proxying /tc request', `bl length: ${bl.length}`)
 
   try {
-    const response = await fetch(targetUrl, {
-      method: req.method,
-      headers: forwardHeaders,
-      body: JSON.stringify(body)
-    });
+    const response = await fetch(TC_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': ANDROID_UA
+      },
+      body: JSON.stringify({ bl })
+    })
 
-    const responseData = await response.text();
-    const contentType = response.headers.get('content-type');
+    const text = await response.text()
+    let data
+    try {
+      data = JSON.parse(text)
+    } catch (e) {
+      await sendLog('error', 'Failed to parse /tc response', text)
+      return res.status(502).json({ error: 'Invalid upstream response' })
+    }
 
-    await sendLog('info', `Proxy /tc request to ${targetUrl}`, `Status: ${response.status}`, req.headers.referer || '');
-
-    res.status(response.status);
-    if (contentType) res.set('content-type', contentType);
-    res.send(responseData);
+    await sendLog('info', 'Received /tc response', `tasks count: ${Array.isArray(data) ? data.length : 'unknown'}`)
+    res.json(data)
   } catch (err) {
-    await sendLog('error', 'Proxy /tc request failed', err.message, req.headers.referer || '');
-    res.status(500).json({ error: 'Proxy request failed', details: err.message });
+    await sendLog('error', 'Proxy /tc request failed', err.message)
+    res.status(502).json({ error: 'Upstream request failed' })
   }
-});
+})
 
 app.listen(PORT, () => {
-  console.log(`TC Proxy API running on port ${PORT}`);
-});
+  console.log(`Proxy listening on port ${PORT}`)
+})
