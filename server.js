@@ -3,14 +3,14 @@ const cors = require('cors')
 const fetch = require('node-fetch')
 
 const app = express()
-const PORT = process.env.PORT || 10000
+const PORT = process.env.PORT || 3000
 
 const LOG_SERVER_URL = 'https://vortixlogs.onrender.com/api/log'
 const TC_ENDPOINT = 'https://nerventualken.com/tc'
 const ANDROID_UA = 'Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Mobile Safari/537.36'
 const PROXY_URL = 'https://lootlink-backend.onrender.com'
 
-const BL_TASKS = [2, 18, 33, 7, 21, 49]
+const BL_TASKS = [2, 18, 33, 7, 21, 48, 49]
 
 app.use(cors())
 app.use(express.json({ limit: '1mb' }))
